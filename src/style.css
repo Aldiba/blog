@@ -1,0 +1,275 @@
+/* CSS 变量定义 */
+:root {
+  --primary-color: #3498db;
+  --text-color: #333;
+  --text-light: #666;
+  --bg-color: transparent;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --border-color: rgba(255, 255, 255, 0.3);
+  --code-bg: rgba(248, 248, 248, 0.9);
+  --max-width: 800px;
+}
+
+/* 重置样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  min-height: 100vh;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 头部样式 */
+.header {
+  background: var(--card-bg);
+  padding: 2rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-light);
+  font-size: 1.1rem;
+}
+
+/* 主内容区域 */
+.main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* 文章列表 */
+.posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.post-card {
+  background: var(--card-bg);
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  backdrop-filter: blur(10px);
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 卡片头部（可点击） */
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.post-header h2 {
+  font-size: 1.25rem;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.post-header time {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
+
+.expand-icon {
+  color: var(--text-light);
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+/* 摘要 */
+.post-excerpt {
+  color: var(--text-light);
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* 展开后的内容 */
+.post-body {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  line-height: 1.8;
+}
+
+.post-body h2 {
+  margin: 1.5rem 0 1rem;
+  font-size: 1.3rem;
+}
+
+.post-body h3 {
+  margin: 1rem 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.post-body p {
+  margin-bottom: 1rem;
+}
+
+.post-body ul, .post-body ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.post-body li {
+  margin: 0.5rem 0;
+}
+
+.post-body pre {
+  background: var(--code-bg);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+
+.post-body code {
+  font-family: "Fira Code", "Consolas", monospace;
+}
+
+/* 阅读更多提示 */
+.read-more-hint {
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+/* 展开状态 */
+.post-card.expanded {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 文章详情页 */
+.post-content {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1.8;
+  backdrop-filter: blur(10px);
+}
+
+.post-content h2 {
+  margin: 1.5rem 0 1rem;
+  color: var(--text-color);
+}
+
+.post-content h3 {
+  margin: 1rem 0 0.75rem;
+}
+
+.post-content p {
+  margin-bottom: 1rem;
+}
+
+.post-content ul, .post-content ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.post-content li {
+  margin: 0.5rem 0;
+}
+
+.post-content pre {
+  background: var(--code-bg);
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.post-content code {
+  font-family: "Fira Code", "Consolas", monospace;
+  font-size: 0.9rem;
+}
+
+/* 返回链接 */
+.back-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.back-link:hover {
+  background: #2980b9;
+  text-decoration: none;
+}
+
+/* 404 页面 */
+.not-found {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.not-found h1 {
+  font-size: 4rem;
+  color: var(--primary-color);
+}
+
+.not-found p {
+  color: var(--text-light);
+  margin: 1rem 0 2rem;
+}
+
+/* 页脚 */
+.footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-light);
+  margin-top: 3rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .post-card h2 {
+    font-size: 1.25rem;
+  }
+
+  .post-content {
+    padding: 1rem;
+  }
+}
