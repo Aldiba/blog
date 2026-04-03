@@ -5,6 +5,9 @@ import helloWorldMd from "./posts/hello-world.md?raw";
 import typescriptNotesMd from "./posts/typescript-notes.md?raw";
 import viteGuideMd from "./posts/vite-guide.md?raw";
 
+// 导入封面图片
+import helloWorldCover from "./posts/hello-world.assets/6e32eeb87c02a59bd9025fb110238a1bec7bd3b4_full-1775198709462.jpg";
+
 // 配置 marked
 marked.setOptions({
   gfm: true,
@@ -17,6 +20,7 @@ export interface Post {
   title: string;
   date: string;
   excerpt: string;
+  cover?: string;
   content: string;
 }
 
@@ -55,24 +59,58 @@ function parseFrontmatter(content: string): { meta: Record<string, string>; body
   return { meta, body };
 }
 
+// 处理 Markdown 内容中的图片链接
+// 将 [文件名](D:\...\xxx.jpg) 转换为正确的图片路径
+function processContent(content: string, postId: string): string {
+  // 匹配类似 [xxx](D:\path\to\file.jpg) 的本地路径
+  // 转换为相对路径
+  const processed = content.replace(
+    /\[([^\]]+)\]\(([^):]+):\\([^)]+\.\w+)\)/g,
+    (_match, alt: string, _dirPath: string, filename: string) => {
+      // 提取文件名作为 alt 文本的一部分
+      const nameWithoutExt = filename.replace(/\.\w+$/, "");
+      const fullAlt = alt.includes(nameWithoutExt) ? alt : `${alt} ${nameWithoutExt}`;
+      // 构建相对路径：./posts/文章名.assets/文件名
+      const relativePath = `./posts/${postId}.assets/${filename}`;
+      return `![${fullAlt}](${relativePath})`;
+    }
+  );
+  
+  return processed;
+}
+
 // 加载所有 MD 文件
 function loadPosts() {
   const mdFiles = [
-    { path: "./posts/hello-world.md", content: helloWorldMd },
-    { path: "./posts/typescript-notes.md", content: typescriptNotesMd },
-    { path: "./posts/vite-guide.md", content: viteGuideMd },
+    { 
+      path: "./posts/hello-world.md", 
+      content: helloWorldMd,
+      cover: helloWorldCover 
+    },
+    { 
+      path: "./posts/typescript-notes.md", 
+      content: typescriptNotesMd 
+    },
+    { 
+      path: "./posts/vite-guide.md", 
+      content: viteGuideMd 
+    },
   ];
   
-  for (const { path, content } of mdFiles) {
+  for (const { path, content, cover } of mdFiles) {
     const { meta, body } = parseFrontmatter(content);
     const id = path.split("/").pop()?.replace(".md", "") || "";
+    
+    // 处理内容中的图片路径
+    const processedContent = processContent(body, id);
     
     posts.push({
       id,
       title: meta.title || "无标题",
       date: meta.date || new Date().toISOString().split("T")[0],
       excerpt: meta.excerpt || "",
-      content: marked.parse(body) as string,
+      cover: cover || meta.cover,
+      content: marked.parse(processedContent) as string,
     });
   }
 
@@ -142,21 +180,26 @@ function renderHome() {
       <div class="posts-list">
         ${posts.map(post => {
           const isExpanded = expandedPosts.has(post.id);
-          const displayContent = isExpanded ? post.content : post.excerpt;
           
           return `
             <article class="post-card ${isExpanded ? 'expanded' : ''}">
               <div class="post-header" onclick="window.togglePost('${post.id}')">
-                <h2>${post.title}</h2>
-                <time>${post.date}</time>
+                <div class="post-title-area">
+                  ${post.cover ? `<img src="${post.cover}" class="post-cover-thumbnail" alt="封面" />` : ""}
+                  <div>
+                    <h2>${post.title}</h2>
+                    <time>${post.date}</time>
+                  </div>
+                </div>
                 <span class="expand-icon">${isExpanded ? '▼' : '▶'}</span>
               </div>
               ${isExpanded ? `
                 <div class="post-body">
-                  ${displayContent}
+                  ${post.cover ? `<img src="${post.cover}" class="post-cover-full" alt="封面" />` : ""}
+                  ${post.content}
                 </div>
               ` : `
-                <p class="post-excerpt">${displayContent}</p>
+                <p class="post-excerpt">${post.excerpt}</p>
                 <p class="read-more-hint">点击展开阅读更多...</p>
               `}
             </article>

@@ -91,16 +91,29 @@ a:hover {
   cursor: pointer;
 }
 
+.post-title-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.post-cover-thumbnail {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
 .post-header h2 {
   font-size: 1.25rem;
   color: var(--text-color);
-  flex: 1;
 }
 
 .post-header time {
   color: var(--text-light);
   font-size: 0.85rem;
-  margin-right: 0.5rem;
 }
 
 .expand-icon {
@@ -109,19 +122,29 @@ a:hover {
   transition: transform 0.3s ease;
 }
 
-/* 摘要 */
-.post-excerpt {
-  color: var(--text-light);
-  margin-top: 0.5rem;
-  line-height: 1.5;
-}
-
 /* 展开后的内容 */
 .post-body {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
   line-height: 1.8;
+}
+
+/* 封面图 */
+.post-cover-full {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+/* 文章内图片 */
+.post-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1rem 0;
 }
 
 .post-body h2 {

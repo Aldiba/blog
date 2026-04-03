@@ -6,7 +6,7 @@ excerpt: 这是我的第一篇博客文章，记录了一些学习心得。
 
 # 欢迎来到我的博客
 
-这是我的第一篇博客文章。我创建这个博客是为了记录我的学习心得和生活感悟。
+这是我的第一篇博客文章。我创建这个博客是为了记录我的学习心得和生活感悟。![6e32eeb87c02a59bd9025fb110238a1bec7bd3b4_full](D:\Github_Up\blog\src\posts\hello-world.assets\6e32eeb87c02a59bd9025fb110238a1bec7bd3b4_full-1775198709462.jpg)
 
 在这个博客中，我会分享：
 
@@ -23,3 +23,4 @@ excerpt: 这是我的第一篇博客文章，记录了一些学习心得。
 ```typescript
 const greeting = "Hello, World!";
 console.log(greeting);
+```
