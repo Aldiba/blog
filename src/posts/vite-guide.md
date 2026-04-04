@@ -2,6 +2,7 @@
 title: Vite 使用指南
 date: 2024-02-01
 excerpt: 介绍 Vite 这个快速的前端构建工具。
+cover: ./posts/vite-guide.assets/1.jpg
 ---
 
 # Vite 使用指南
@@ -39,3 +40,4 @@ export default defineConfig({
     outDir: 'dist'
   }
 })
+```

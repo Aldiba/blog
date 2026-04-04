@@ -80,10 +80,10 @@ export const fragmentShader = `
 export const defaultUniforms = {
   u_time_speed: 0.25,
   u_uv_scale: 8.0,
-  u_layers: 4,
+  u_layers: 3.0,
   u_color_saturation: 1.0,
   u_pattern_detail: 1.0,
-  u_contrast: 38.0,
+  u_contrast: 25.0,
   u_noise_intensity: 0.02,
   u_vignette: 0.03,
   u_base_color: [0.5, 0.8, 1.0]

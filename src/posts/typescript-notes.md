@@ -2,7 +2,10 @@
 title: TypeScript 学习笔记
 date: 2024-01-15
 excerpt: 记录学习 TypeScript 过程中的一些知识点。
+cover: ./posts/typescript-notes.assets/1.png
 ---
+
+![1](D:\Github_Up\blog\src\posts\typescript-notes.assets\1.png)
 
 # TypeScript 学习笔记
 
