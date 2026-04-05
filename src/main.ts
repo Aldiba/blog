@@ -36,13 +36,6 @@ console.log('扫描到的音乐文件:', musicFiles);
 let audioPlayer: HTMLAudioElement | null = null;
 let isPlaying = false;
 let currentTrackIndex = 0;
-let musicUnlocked = false;
-
-// 配置 marked
-marked.setOptions({
-  gfm: true,
-  breaks: true,
-});
 
 // 配置 marked
 marked.setOptions({
@@ -95,6 +88,40 @@ function sanitizeHtml(html: string): string {
   return clean;
 }
 
+// 修复图片路径 - 将绝对路径/相对路径转换为可访问的路径
+// D:\Github_Up\blog\src\posts\xxx.jpg -> /src/posts/xxx.jpg
+// ./posts/xxx.jpg -> /src/posts/xxx.jpg
+function fixImagePath(src: string): string {
+  // 统一使用正斜杠
+  let normalized = src.replace(/\\/g, '/');
+  
+  // 处理绝对路径 D:\Github_Up\blog\...
+  const blogIndex = normalized.indexOf('blog/');
+  if (blogIndex !== -1) {
+    return '/' + normalized.substring(blogIndex + 5);
+  }
+  
+  // 处理相对路径 ./posts/xxx 或 posts/xxx
+  if (normalized.startsWith('./')) {
+    return '/' + normalized.substring(2);
+  }
+  if (normalized.startsWith('posts/')) {
+    return '/src/' + normalized;
+  }
+  
+  return src;
+}
+
+// 修复 HTML 内容中的所有图片路径
+function fixHtmlImagePaths(html: string): string {
+  return html.replace(
+    /(<img[^>]+src=["'])([^"']+)(["'])/gi,
+    (_match, prefix, src, suffix) => {
+      return `${prefix}${fixImagePath(src)}${suffix}`;
+    }
+  );
+}
+
 // 解析 Markdown 文件的 frontmatter
 function parseFrontmatter(content: string): { meta: Record<string, string>; body: string } {
   const match = content.match(/^---\s*([\s\S]*?)\s*---[\s\S]*$/);
@@ -139,8 +166,8 @@ function loadPosts() {
       title: meta.title || "无标题",
       date: meta.date || new Date().toISOString().split("T")[0],
       excerpt: meta.excerpt || "",
-      cover: cover || meta.cover,
-      content: sanitizeHtml(marked.parse(body) as string),
+      cover: cover || (meta.cover ? fixImagePath(meta.cover) : undefined),
+      content: fixHtmlImagePaths(sanitizeHtml(marked.parse(body) as string)),
       tags,
     });
   }
@@ -269,7 +296,7 @@ function toggleMusic() {
     audioPlayer.loop = false;
     audioPlayer.addEventListener('ended', playNextTrack);
     audioPlayer.addEventListener('play', () => {
-      musicUnlocked = true;
+      // 音频已解锁
     }, { once: true });
   }
   
@@ -323,7 +350,7 @@ function autoPlayMusic() {
     
     // 尝试解锁音频上下文
     audioPlayer.addEventListener('play', () => {
-      musicUnlocked = true;
+      // 音频已解锁
     }, { once: true });
   }
   
@@ -355,7 +382,7 @@ function renderHome() {
       <!-- 侧边时间线导航 -->
       <aside class="timeline-sidebar">
         <div class="timeline-line"></div>
-        ${posts.map((post, index) => `
+        ${posts.map((post) => `
           <div class="timeline-node" onclick="window.scrollToPost('${post.id}')">
             <span class="timeline-dot"></span>
             <span class="timeline-label">${escapeHtml(post.title)}</span>

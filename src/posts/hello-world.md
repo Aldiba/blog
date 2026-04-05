@@ -2,7 +2,7 @@
 title: 第一篇博客文章
 date: 2024-01-01
 excerpt: 这是我的第一篇博客文章，记录了一些学习心得。
-cover: ./posts/文章名.assets/封面图文件名.jpg
+cover: ./posts/hello-world.assets/1.png
 ---
 
 # 欢迎来到我的博客
