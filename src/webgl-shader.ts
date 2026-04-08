@@ -10,8 +10,8 @@ class WebGLShader {
   private animationId: number | null = null;
   private isVisible: boolean = true;
   private lastFrameTime: number = 0;
-  private readonly targetFPS: number = 30;
-  private readonly resolutionScale: number = 0.10; // 降低分辨率到 50%，性能提升约 75%
+  private readonly targetFPS: number = 24;
+  private readonly resolutionScale: number = 0.1; // 降低分辨率到 50%，性能提升约 75%
 
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;

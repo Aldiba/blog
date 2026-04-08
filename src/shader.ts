@@ -78,7 +78,7 @@ export const fragmentShader = `
 `;
 
 export const defaultUniforms = {
-  u_time_speed: 0.20,
+  u_time_speed: 0.25,
   u_uv_scale: 8.0,
   u_layers: 4.0,
   u_color_saturation: 1.0,
