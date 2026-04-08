@@ -69,8 +69,8 @@ export const fragmentShader = `
     vec2 N = v_texCoord - 0.5;
     N.x *= u_resolution.x / u_resolution.y;
     col = 1.0 - pow(1.0 - col, vec4(u_contrast));
-    col.rgb += hash32(gl_FragCoord.xy + u_time).r * u_noise_intensity;
-    col *= 1.0 - dot(N, N * 2.0) * u_vignette;
+    // col.rgb += hash32(gl_FragCoord.xy + u_time).r * u_noise_intensity;
+    // col *= 1.0 - dot(N, N * 2.0) * u_vignette;
     col.a = 1.0;
     
     gl_FragColor = col;
@@ -78,12 +78,12 @@ export const fragmentShader = `
 `;
 
 export const defaultUniforms = {
-  u_time_speed: 0.25,
+  u_time_speed: 0.20,
   u_uv_scale: 8.0,
   u_layers: 4.0,
   u_color_saturation: 1.0,
   u_pattern_detail: 1.0,
-  u_contrast: 48.0,
+  u_contrast: 55.0,
   u_noise_intensity: 0.01,    // 关闭噪点效果以提升性能
   u_vignette: 0.0,             // 关闭暗角效果以提升性能
   u_base_color: [0.5, 0.8, 1.0]
