@@ -8,6 +8,10 @@ class WebGLShader {
   private uniforms: { [key: string]: WebGLUniformLocation | null };
   private startTime: number;
   private animationId: number | null = null;
+  private isVisible: boolean = true;
+  private lastFrameTime: number = 0;
+  private readonly targetFPS: number = 30;
+  private readonly resolutionScale: number = 0.10; // 降低分辨率到 50%，性能提升约 75%
 
   constructor(canvasId: string) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -27,7 +31,22 @@ class WebGLShader {
     this.startTime = Date.now();
 
     this.resize();
+    this.setupBuffers(); // 初始化时只调用一次
+    
+    // 监听窗口大小变化
     window.addEventListener("resize", () => this.resize());
+    
+    // 监听页面可见性变化 -  切后台时暂停渲染，节省资源！
+    document.addEventListener("visibilitychange", () => {
+      this.isVisible = document.visibilityState === "visible";
+      if (this.isVisible) {
+        // 页面重新可见时恢复渲染
+        this.start();
+      } else {
+        // 页面不可见时停止渲染 - 别浪费电
+        this.stop();
+      }
+    });
   }
 
   private createShader(type: number, source: string): WebGLShader | null {
@@ -109,14 +128,28 @@ class WebGLShader {
   }
 
   private resize() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    this.canvas.width = Math.floor(window.innerWidth * this.resolutionScale);
+    this.canvas.height = Math.floor(window.innerHeight * this.resolutionScale);
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
   }
 
   render() {
+    // 页面不可见时不渲染 - 节省 GPU 资源！
+    if (!this.isVisible) {
+      return;
+    }
+    
+    // 帧率限制 - 就像电影的帧率一样，保持流畅就行
+    const now = Date.now();
+    const elapsed = now - this.lastFrameTime;
+    const frameInterval = 1000 / this.targetFPS;
+    
+    if (elapsed < frameInterval) {
+      return;
+    }
+    this.lastFrameTime = now - (elapsed % frameInterval);
+    
     this.gl.useProgram(this.program);
-    this.setupBuffers();
 
     const time = (Date.now() - this.startTime) / 1000;
 

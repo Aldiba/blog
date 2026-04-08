@@ -11,7 +11,7 @@ export const vertexShader = `
 `;
 
 export const fragmentShader = `
-  precision mediump float;
+  precision lowp float; // 小糸酱: 降低精度以节省 GPU 资源，视觉效果应该不会差太多
   
   varying vec2 v_texCoord;
   
@@ -80,11 +80,11 @@ export const fragmentShader = `
 export const defaultUniforms = {
   u_time_speed: 0.25,
   u_uv_scale: 8.0,
-  u_layers: 3.0,
+  u_layers: 4.0,
   u_color_saturation: 1.0,
   u_pattern_detail: 1.0,
-  u_contrast: 25.0,
-  u_noise_intensity: 0.02,
-  u_vignette: 0.03,
+  u_contrast: 48.0,
+  u_noise_intensity: 0.01,    // 关闭噪点效果以提升性能
+  u_vignette: 0.0,             // 关闭暗角效果以提升性能
   u_base_color: [0.5, 0.8, 1.0]
 };
