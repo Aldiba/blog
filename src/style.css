@@ -74,13 +74,6 @@ a:hover {
   transform: scale(1.1);
 }
 
-/* 主内容区域 */
-.main {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
 /* 文章列表 */
 .posts-list {
   display: flex;
@@ -127,12 +120,6 @@ a:hover {
   font-size: 0.85rem;
 }
 
-.expand-icon {
-  color: var(--text-light);
-  font-size: 0.8rem;
-  transition: transform 0.3s ease;
-}
-
 /* 封面横幅 */
 .post-cover-banner {
   width: 100%;
@@ -147,20 +134,6 @@ a:hover {
   height: 100%;
   object-fit: contain;
   background: #f0f0f0;
-}
-
-/* 展开后的内容 - 保留动画版本 */
-.post-body {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  line-height: 1.8;
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  padding-top: 0;
-  padding-bottom: 0;
-  transition: max-height 0.6s ease-in-out, opacity 0.6s ease-in-out, padding 0.6s ease-in-out;
 }
 
 /* 封面图 */
@@ -218,11 +191,21 @@ a:hover {
 }
 
 /* 阅读更多提示 */
-.read-more-hint {
+.read-more-hint,
+.loading-hint {
   color: var(--primary-color);
   font-size: 0.9rem;
   margin-top: 0.75rem;
   text-align: center;
+}
+
+.loading-hint {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 /* 展开状态 */
@@ -490,6 +473,8 @@ a:hover {
   flex-direction: column;
   gap: 0;
   z-index: 100;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 /* 时间线节点 */

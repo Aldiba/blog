@@ -8,10 +8,16 @@ import { marked } from "marked";
 // 这样就可以自动找到所有文章了！
 // 呀↑哈～！好方便！
 
-// 使用 import.meta.glob 自动扫描
-const mdModules = import.meta.glob("./posts/*.md", { 
-  query: '?raw', 
-  eager: true 
+// 元数据：eager 加载，用 ?frontmatter 只提取 YAML 头部（不包含正文）
+const mdMetaModules = import.meta.glob("./posts/*.md", {
+  query: '?frontmatter',
+  eager: true
+});
+
+// 正文：lazy 加载，点击展开时才动态导入完整 markdown
+const mdBodyModules = import.meta.glob("./posts/*.md", {
+  query: '?raw',
+  eager: false
 });
 
 // 封面图片自动扫描
@@ -25,14 +31,11 @@ const allCoverModules = { ...coverModules, ...coverModulesPng };
 // 嗯...用 ../res/music 就对了
 // 呀↑哈～！终于找到了！
 // 用相对路径从 src 目录向上查找 res 目录
-const debugMusicModules = import.meta.glob("../res/music/*");
-console.log('music glob 结果:', debugMusicModules);
-console.log('music glob keys:', Object.keys(debugMusicModules));
-
-// 正确路径
 const musicModules = import.meta.glob("../res/music/*.mp3", { eager: true });
 const musicFiles = Object.keys(musicModules);
-console.log('扫描到的音乐文件:', musicFiles);
+if (import.meta.env.DEV) {
+  console.log('扫描到的音乐文件:', musicFiles);
+}
 let audioPlayer: HTMLAudioElement | null = null;
 let isPlaying = false;
 let currentTrackIndex = 0;
@@ -79,12 +82,16 @@ function escapeHtml(text: string): string {
 function sanitizeHtml(html: string): string {
   // 移除 <script> 标签及其内容
   let clean = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  // 移除 <onclick>, <onerror> 等事件属性
-  clean = clean.replace(/\s+on\w+="[^"]*"/gi, '');
-  // 移除 javascript: 协议
-  clean = clean.replace(/javascript:/gi, '');
-  // 移除 data: 协议（可能用于_base64 攻击）
-  clean = clean.replace(/data:/gi, '');
+  // 移除 <iframe>, <embed>, <object> 等嵌入标签
+  clean = clean.replace(/<(iframe|embed|object)\b[\s\S]*?<\/\1>/gi, '');
+  clean = clean.replace(/<(iframe|embed|object)\b[^>]*\/?>/gi, '');
+  // 移除事件属性（双引号、单引号、无引号）
+  clean = clean.replace(/\s+on\w+\s*=\s*"[^"]*"/gi, '');
+  clean = clean.replace(/\s+on\w+\s*=\s*'[^']*'/gi, '');
+  clean = clean.replace(/\s+on\w+\s*=\s*\S+/gi, '');
+  // 移除危险协议
+  clean = clean.replace(/(href|src|xlink:href)\s*=\s*["']\s*javascript:/gi, '$1="javascript-removed:');
+  clean = clean.replace(/(href|src|xlink:href)\s*=\s*["']\s*data:/gi, '$1="data-removed:');
   return clean;
 }
 
@@ -122,7 +129,23 @@ function fixHtmlImagePaths(html: string): string {
   );
 }
 
-// 解析 Markdown 文件的 frontmatter
+// 解析 YAML 字符串为键值对
+function parseMetaYaml(yaml: string): Record<string, string> {
+  const meta: Record<string, string> = {};
+  for (const line of yaml.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const colonIndex = trimmed.indexOf(":");
+    if (colonIndex > 0) {
+      const key = trimmed.substring(0, colonIndex).trim();
+      const value = trimmed.substring(colonIndex + 1).trim();
+      if (key) meta[key] = value;
+    }
+  }
+  return meta;
+}
+
+// 解析 Markdown 文件的 frontmatter 和正文
 function parseFrontmatter(content: string): { meta: Record<string, string>; body: string } {
   const match = content.match(/^---\s*([\s\S]*?)\s*---[\s\S]*$/);
   if (!match) {
@@ -132,42 +155,30 @@ function parseFrontmatter(content: string): { meta: Record<string, string>; body
     };
   }
 
-  const meta: Record<string, string> = {};
-  const metaLines = match[1].split("\n");
-  for (const line of metaLines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const colonIndex = trimmed.indexOf(":");
-    if (colonIndex > 0) {
-      const key = trimmed.substring(0, colonIndex).trim();
-      const value = trimmed.substring(colonIndex + 1).trim();
-      if (key) {
-        meta[key] = value;
-      }
-    }
-  }
-
   const body = content.replace(/^---[\s\S]*?---/, "").trim();
-  return { meta, body };
+  return { meta: parseMetaYaml(match[1]), body };
 }
 
-// 加载所有 MD 文件（使用自动扫描）
+// 正文缓存：首次展开时解析并缓存，后续直接复用
+const contentCache = new Map<string, string>();
+
+// 加载文章元数据（仅 frontmatter，不包含正文）
 function loadPosts() {
-  for (const [path, module] of Object.entries(mdModules)) {
-    const content = (module as { default: string }).default;
-    const { meta, body } = parseFrontmatter(content);
-    
+  for (const [path, module] of Object.entries(mdMetaModules)) {
+    const frontmatter = (module as { default: string }).default;
+    const meta = frontmatter ? parseMetaYaml(frontmatter) : {};
+
     const id = path.replace("./posts/", "").replace(".md", "");
     const cover = findCover(path);
     const tags = meta.tags ? meta.tags.split(",").map(t => t.trim()) : [];
-    
+
     posts.push({
       id,
       title: meta.title || "无标题",
       date: meta.date || new Date().toISOString().split("T")[0],
       excerpt: meta.excerpt || "",
       cover: cover || (meta.cover ? fixImagePath(meta.cover) : undefined),
-      content: fixHtmlImagePaths(sanitizeHtml(marked.parse(body) as string)),
+      content: "", // 延迟加载
       tags,
     });
   }
@@ -178,13 +189,28 @@ function loadPosts() {
 function findCover(postPath: string): string | undefined {
   const postDir = postPath.replace("./posts/", "").replace(".md", "");
   const assetsDir = `./posts/${postDir}.assets/`;
-  
+
   for (const [path, module] of Object.entries(allCoverModules)) {
     if (path.startsWith(assetsDir)) {
       return (module as { default: string }).default;
     }
   }
   return undefined;
+}
+
+// 按需加载文章正文（动态导入 → marked 解析 → 缓存）
+async function loadPostContent(id: string): Promise<string> {
+  if (contentCache.has(id)) return contentCache.get(id)!;
+
+  const loader = mdBodyModules[`./posts/${id}.md`];
+  if (!loader) return '<p>文章未找到</p>';
+
+  const module = await loader();
+  const raw = (module as { default: string }).default;
+  const { body } = parseFrontmatter(raw);
+  const html = fixHtmlImagePaths(sanitizeHtml(marked.parse(body) as string));
+  contentCache.set(id, html);
+  return html;
 }
 
 // ============================================================
@@ -222,12 +248,12 @@ const router = new Router();
 // ============================================================
 // 切换展开/收起
 // ============================================================
-function togglePost(id: string) {
-  const card = document.querySelector(`[data-post-id="${id}"]`);
-  const body = card?.querySelector('.post-body') as HTMLElement;
+async function togglePost(id: string) {
   const wasExpanded = expandedPosts.has(id);
-  
+
   if (wasExpanded) {
+    // 收起：折叠动画完成后重建 DOM
+    const body = document.querySelector(`[data-post-id="${id}"] .post-body`) as HTMLElement;
     if (body) {
       body.style.maxHeight = '0';
       body.style.opacity = '0';
@@ -239,30 +265,52 @@ function togglePost(id: string) {
       renderHome();
     }, 600);
   } else {
+    // 展开：先显示加载状态
     expandedPosts.add(id);
     renderHome();
-    requestAnimationFrame(() => {
-      const newBody = document.querySelector(`[data-post-id="${id}"] .post-body`) as HTMLElement;
-      if (newBody) {
-        newBody.style.maxHeight = newBody.scrollHeight + 'px';
-        newBody.style.opacity = '1';
-        newBody.style.paddingTop = '1rem';
-        newBody.style.paddingBottom = '1rem';
+
+    // 如果已缓存则直接展开，否则加载正文
+    if (!contentCache.has(id)) {
+      const body = document.querySelector(`[data-post-id="${id}"] .post-body`) as HTMLElement;
+      if (body) {
+        body.innerHTML = '<p style="text-align:center;color:#888;">加载中...</p>';
+        body.style.maxHeight = '100px';
+        body.style.opacity = '1';
+        body.style.paddingTop = '1rem';
+        body.style.paddingBottom = '1rem';
       }
-    });
+    }
+
+    const content = await loadPostContent(id);
+    const post = posts.find(p => p.id === id);
+    if (post) post.content = content;
+
+    // 注入正文并展开
+    const body = document.querySelector(`[data-post-id="${id}"] .post-body`) as HTMLElement;
+    if (body) {
+      body.innerHTML = content;
+      body.style.maxHeight = '0';
+      // 强制回流后重新计算高度
+      requestAnimationFrame(() => {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        body.style.opacity = '1';
+        body.style.paddingTop = '1rem';
+        body.style.paddingBottom = '1rem';
+      });
+    }
   }
 }
 
 // ============================================================
 // 滚动到指定文章
 // ============================================================
-function scrollToPost(id: string) {
+async function scrollToPost(id: string) {
   const postElement = document.getElementById(`post-${id}`);
   if (postElement) {
     postElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     // 展开文章
     if (!expandedPosts.has(id)) {
-      togglePost(id);
+      await togglePost(id);
     }
   }
 }
@@ -281,7 +329,6 @@ function playNextTrack() {
   // 随机选择下一首
   currentTrackIndex = Math.floor(Math.random() * musicFiles.length);
   const trackPath = musicFiles[currentTrackIndex].replace('./', '/');
-  console.log('播放:', trackPath);
   
   if (audioPlayer) {
     audioPlayer.src = trackPath;
@@ -411,12 +458,12 @@ function renderHome() {
                 
                 ${post.cover ? `
                   <div class="post-cover-mini ${isExpanded ? 'expanded' : ''}">
-                    <img src="${post.cover}" class="cover-image" alt="封面" />
+                    <img src="${post.cover}" class="cover-image" alt="封面" onerror="this.style.display='none'" />
                   </div>
                 ` : ''}
                 
                 <div class="post-body${isExpanded ? ' expanded' : ''}">
-                  ${isExpanded ? post.content : `
+                  ${isExpanded ? (post.content || '<p class="loading-hint">加载中...</p>') : `
                     <p class="post-excerpt">${escapeHtml(post.excerpt)}</p>
                     <p class="read-more-hint">点击展开阅读更多...</p>
                   `}
